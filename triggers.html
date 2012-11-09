@@ -34,7 +34,6 @@
 <li>common arguments</li>
 <li>trigger-specific arguments and other details</li>
 <li>tips</li>
-<li>appendix 1 -- efficiency of <code>POST_CREATE</code></li>
 </ul></li>
 </ul>
 
@@ -59,7 +58,7 @@ here's an excerpt:</p>
         ],
 
     # comment out or uncomment as needed
-    # these will run in sequence after a new repo is created
+    # these will run in sequence after a new wild repo is created
     POST_CREATE                 =&gt;
         [
             'post-compile/update-git-configs',
@@ -69,8 +68,7 @@ here's an excerpt:</p>
 </code></pre>
 
 <p>(As you can see, post-create runs 3 programs that also run from post-compile.
-This is perfectly fine, by the way, but please see a note on efficiency for
-large configs in the appendix.)</p>
+This is perfectly fine, by the way)</p>
 
 <h2>types of trigger programs</h2>
 
@@ -200,74 +198,16 @@ foo" line to the conf file).  This case has only one extra argument:</p>
 
 <ul>
 <li>repo</li>
-</ul>
-
-<p><strong>Please see the appendix for a note on efficiency of the default
-<code>POST_CREATE</code> trigger list</strong>.</p></li>
+</ul></li>
 <li><p><code>POST_COMPILE</code> runs after an admin push has successfully "compiled" the
 config file.  By default, the next thing is to update the ssh authkeys
 file, then all the 'git-config's, gitweb access, and daemon access.</p>
 
-<p><p>No extra arguments.</p></li>
-</ul></p>
+<p>No extra arguments.</p></li>
+</ul>
 
 <h2>tips</h2>
 
 <p>If you have code that latches onto more than one trigger, collecting data
 (such as for logging), then the outputs may be intermixed.  You can record the
 value of the environment variable <code>GL_TID</code> to tie together related entries.</p>
-
-<h2>appendix 1 -- efficiency of <code>POST_CREATE</code></h2>
-
-<p>The <code>POST_CREATE</code> trigger is called when</p>
-
-<ul>
-<li>the admin pushes a change that creates a new (normal) repo</li>
-<li>a user creates a new "wild" repo,</li>
-<li>a user uses the "perms" command, and</li>
-<li>a user uses the "fork" command.</li>
-</ul>
-
-<p>The trigger calls 3 programs (see rc file):</p>
-
-<pre><code>post-compile/update-git-configs
-post-compile/update-gitweb-access-list
-post-compile/update-git-daemon-access-list
-</code></pre>
-
-<p>You might notice that these programs are also called from the <code>POST_COMPILE</code>
-trigger, which is the normal way they are supposed to run (i.e., when an admin
-pushes to the gitolite-admin repo).</p>
-
-<p>However, when a user creates a <a href="wild.html">wild</a> repo or runs <a href="user.html#perms">perms</a> on an existing
-one to make it readable by, say, 'gitweb', then you can't be waiting for the
-next 'git push' by the admin for the change to take effect!</p>
-
-<p>This led to creating the <code>POST_CREATE</code> trigger, and to put in the same three
-programs into this trigger list.</p>
-
-<p>Sadly, the 2nd and the 3rd of those 3 programs are very wasteful -- they run
-through <em>all</em> the repos when really only <em>one</em> repo has been affected.</p>
-
-<p>If you're concerned about this, you have 3 choices:</p>
-
-<ul>
-<li><p>if you don't have too many repos, ignore the problem.</p></li>
-<li><p>take out the 2nd and 3rd lines from the <code>POST_CREATE</code> list in the rc file,
-so they don't run.</p>
-
-<p>Then run 'gitolite trigger POST<em>COMPILE' from cron at regular intervals.
-(Note that is POST</em>COMPILE not POST_CREATE!)  However, this means that
-gitweb and daemon permissions won't be current immediately after someone
-adds a new repo or sets perms etc.; they get updated only on the next cron
-run.</p></li>
-<li><p>patch the programs to add this optimisation (and send me the patches).
-The optimisation would check if arg-1 ($1 in shell, $ARGV[0] in perl) is
-'POST_CREATE', and if it is, take the <em>next</em> argument as a repo name that
-may have changed, and work on only that repo.  You can see this code in
-the first program (the one that runs 'git config').</p>
-
-<p>This should be easy enough for the daemon update, but the gitweb update
-may be a little more tricky, since it may involve <em>deleting</em> lines from
-the "projects.list" file.</p></li>
-</ul>
