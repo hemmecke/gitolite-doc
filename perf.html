@@ -55,12 +55,13 @@ how often do you create new wild repos?</p>
 
 <p>Anyway, the real heavy hitters here are the scripts that update the gitweb
 and git-daemon access.  If you don't need to worry about those two, your
-admin should uncomment the appropriate entries in the <code>POST_CREATE</code> and
+admin should comment out the appropriate entries in the <code>POST_CREATE</code> and
 <code>POST_COMPILE</code> lists in the rc file.</p>
 
 <p>And then the 28 seconds will drop to 0.5 seconds!</p></li>
-<li><p>Pushing the admin repo takes about 35 seconds.  Again, if you don't need
-gitweb and daemon and so uncomment those lines, this drops to 7 seconds.</p></li>
+<li><p>Pushing the admin repo takes about 35 seconds.  If you do what the
+previous point said (comment out the entries from both the lists), this
+drops to 7 seconds.</p></li>
 </ul>
 
 <h2>mine is bigger than yours</h2>
@@ -70,14 +71,15 @@ git-daemon.  What do you do?</p>
 
 <ul>
 <li><p>Make those two scripts run in the background.  See src/triggers/bg.</p></li>
-<li><p>Fix them to make at least the wild repo creation run faster (an admin push
-will still be slow) and send me a patch :)</p>
+<li><p>If you're more concerned about your users' time when they create a new
+wild repo (and not so much about the admin push taking time), fix those
+two scripts and send me a patch :)</p>
 
 <p>Scripts invoked via <code>POST_CREATE</code> <em>do</em> get information about what repo has
 just been created.  However, the gitweb and daemon scripts are not set to
-take advantage of this, only the git-config one is.  So use that script as
-an example, and/or read the <a href="triggers.html">triggers</a> documentation, and fix the other
-two programs.</p>
+take advantage of this, only the git-config one is.  So use the git-config
+script as an example, and/or read the <a href="triggers.html">triggers</a> documentation, and fix
+the other two programs.</p>
 
 <p>(This should be easy enough for the daemon update, but the gitweb update
 may be a little more tricky, since it may involve <em>deleting</em> lines from

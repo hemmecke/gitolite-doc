@@ -55,36 +55,67 @@ appreciate a review of the code -- it's not too big, the diff is only about
 on a repo), there are a couple of places where gitolite is somewhat wasteful,
 because each run, being a <em>separate</em> program, recomputes the same things.</p>
 
-<p>The first is the parsing of the "gitolite.conf-compiled.pm" file, which
-contains all the access rules that pertain to repo groups or repo patterns
-(i.e., not to any particular repo specifically).  If that file is large, there
-could arguably be several rules in it that do <em>not</em> pertain to the current
-repo, and are a waste of time to parse.</p>
+<p>The first instance of wasted effort occurs only in really large setups.  The
+<code>~/.gitolite/conf/gitolite.conf-compiled.pm</code> file, which is read every time
+gitolite is invoked, probably contains a lot of stuff that is not relevant to
+the repo currently being accessed, and thus is a waste of time to parse.</p>
 
 <p>Worse, for write operations this whole thing happens again, since the update
-hook is, for all practical purposes, a completely separate program.</p>
+hook is, for all practical purposes, a completely separate program, and thus
+has to read all the same stuff again.</p>
 
-<p>The second is the code that generates the list of rules that apply to <em>this</em>
-user on <em>this</em> repo.  Consider something like this:</p>
+<p>(On the plus side, this is pure perl code, and perl <em>is</em> pretty fast, so
+unless this file is larger than a couple of hundred kB it's probably not an
+issue).</p>
 
-<pre><code>repo foo
-    RW              =   alice
-    RW+ dev/USER/   =   @staff
-    RW  refs/tags/  =   @QA
-    -               =   @interns
-    RW+             =   @staff
+<p>The second instance doesn't even need large setups, it's the complexity that
+counts (although of course large <em>and</em> complex would make it a bit worse!)</p>
+
+<p>Consider a conf like this:</p>
+
+<pre><code># repo groups, foss and proprietary
+@foss   =   linux git gitolite
+@prop   =   foo-proj bar-proj baz-proj
+
+# user groups
+@boss   =   PHB
+@lead   =   dilbert
+@devs   =   alice
+@ints   =   ashok
+@QA     =   bob
+
+repo @foss
+    R                       =   @all
+    -                       =   @all
+    RW+ dev/USER/           =   @all
+    RW+ company/            =   @devs
+    RW+ refs/tags/company/  =   @devs
+    RW  refs/tags/          =   @QA
+
+repo @prop
+    R                       =   @boss
+    RW+                     =   @lead
+    RW  master              =   @devs
+    RW+ dev/USER/           =   @all
+    RW  refs/tags/v[0-9]    =   @QA
+    -   refs/tags/v[0-9]    =   @all
+    RW+ refs/tags/          =   @devs
+    RW+ refs/tags/USER/     =   @ints
 </code></pre>
 
-<p>Depending on which of the 3 groups Alice is a member of, anything from 1 to 5
-rules actually <em>apply</em> to her, and the rest don't.  Determining the ruleset
-for a specific user-repo combination <em>does</em> take some code.</p>
+<p>When a specific user tries to access a specific repo, it takes some code to
+come up with the exact list of rules that should be tested.  (Briefly, it
+needs to consider group memberships of both repos and users [and the latter is
+affected by the contents of the gl-perms file if it's a wild repo, and whether
+he's the creator or not!], as well as any wild card patterns that match the
+repo, and bring all those rules together in the right sequence).</p>
 
 <p>So what this version of gitolite does is simply cache the ruleset for every
 repo-user combination that is access-checked.  That's it.  The next time the
 same user tries to access the same repo, all that code is bypassed.</p>
 
 <p>On my laptop, the figures are 150 milliseconds versus 0.6 milliseconds.
-The ssh connection and perl startup are about 200 + 80 millisecond
+The ssh connection and perl startup are about 200 and 80 milliseconds
 respectively, so you've shaved 33% off of each read attempt, and 50% off of
 each write!</p>
 
@@ -94,7 +125,8 @@ system is up, the higher the hit-rate, which is great!</p>
 <p>That's the <strong>good news</strong>.</p>
 
 <p>The <strong>bad news</strong> is that there are some situations in which the cache is
-flushed, bringing your system back to square one.</p>
+flushed, bringing your system back to square one until it has built up the
+cache again:</p>
 
 <ul>
 <li><p>every time 'gitolite compile' runs (e.g., when you push the admin repo)</p>
@@ -102,19 +134,19 @@ flushed, bringing your system back to square one.</p>
 <p>So if frequent pushes to gitolite-admin are the cause of your problem,
 this won't help you.  In fact, it'll make it worse, because any access
 that misses the cache now takes <em>more</em> time than before (the normal time,
-plus time to deal with the caching software/API).</p></li>
+plus time to update the cache).</p></li>
 <li><p>every time the owner of a wild repo touches the gl-perms file, all rules
-for this specific repo are flushed (not the entire cache, though so that's
-not too bad).</p></li>
+for this specific repo are flushed (not the entire cache, though, so
+that's not too bad).</p></li>
 <li><p>finally, and worst of all, if you have defined an external program
 (<code>GROUPLIST_PGM</code>) to supply a list of groups a given user belongs to, all
 cache entries are only saved for 60 seconds, instead of the normal 9999
-seconds (just over a day).  This is because there is no way to tell what
-group a user may be in from one minute to the next, and if his group list
-changes, so does the ruleset.</p>
+seconds (just over a day).  This is because something outside out control
+could change group memberships and if a user's group list changes, so does
+the applicable ruleset.</p>
 
 <p>You can set <code>CACHE_TTL</code> in the rc file to some larger value if you know
 that your external group list data does not change that often, or that
-when it does, it's ok to run with a stale group list for a user for some
-time.</p></li>
+even if it does, it's ok to run with a stale group list for a user for
+some time.  But it probably won't be smart to make it 9999 :-(</p></li>
 </ul>
