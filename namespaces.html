@@ -135,8 +135,8 @@ name.</p>
 
 <p>A reponame of 'alice/linux' gives you a namespace of 'alice' and a backing
 reponame of 'linux'.  Similarly, 'alice/linux/2.2' gives you 'alice' and
-'linux/2.2'; notice how the asterisk grabs up all the remaining components
-in the repo name.</p></li>
+'linux/2.2' (which means a repo of that name has to exist!); notice how
+the asterisk grabs up all the remaining components in the repo name.</p></li>
 <li><p>This one separates the first, the second, and all the rest, but combines
 them in a different order:</p>
 
@@ -175,8 +175,8 @@ repo CREATOR/..*
 
 <p>Firstly, this shows how to specify more than one namespace pattern.  Each
 pattern is tried in <em>lexically</em> sorted order until a match is found.
-(Warning: "lexically sorted" means namespace.pattern-10 sorts before
-namespace.pattern-2!)</p>
+(Warning: "lexically sorted" means 'namespace.pattern-10' sorts before
+'namespace.pattern-2'!)</p>
 
 <p>Secondly, the example shows that you can hardcode anything, like we did
 for the backing reponame in pattern 1.</p>
@@ -184,7 +184,9 @@ for the backing reponame in pattern 1.</p>
 <p>Thirdly, it shows how you can specify a pattern that disables namespacing,
 like the last pattern.  When the backing repo name ends up being exactly
 the same as the original repo name, gitolite notices this and treats it as
-a real repo, not as a logical repo.</p>
+a real repo, not as a logical repo.  (If this confuses you, ignore it and
+use some other pattern, say <code>CREATOR/personal/..*</code> for developers personal
+repos, and don't give them namespace pattern options).</p>
 
 <p>Here are some example results from this setup:</p>
 
@@ -240,7 +242,8 @@ the push to succeed!</p>
 <h3>gitolite functionality</h3>
 
 <p>Most things you're used to in gitolite won't work with logical repos.  From
-the client point of view, <strong>the only features guaranteed to work are</strong>:</p>
+the client point of view, <strong>the only features guaranteed to work on logical
+repos are</strong>:</p>
 
 <ul>
 <li>normal git operations (clone, fetch, push)</li>
@@ -248,15 +251,15 @@ the client point of view, <strong>the only features guaranteed to work are</stro
 <li>the <a href="user.html#perms">perms</a> command (except the "-c" flag)</li>
 </ul>
 
-<p>From a server/admin point of view, <strong>the following will not work, and may even
-fail silently!</strong>:</p>
+<p>From a server/admin point of view, <strong>the following will not work for logical
+repos, and may even fail silently!</strong>:</p>
 
 <ul>
 <li>smart-http mode</li>
 <li>the 'config' line in gitolite.conf</li>
 <li>any 'option's affecting a physical repo, like RepoUmask</li>
 <li>anything that expects to be recorded somewhere in the bare repo directory.</li>
-<li>and anything else not explicitly listed as "working" in this document ;-)</li>
+<li>...and anything else not explicitly listed as "working" in this doc ;-)</li>
 </ul>
 
 <h3>gitolite functionality -- mirroring</h3>
@@ -266,11 +269,6 @@ the same mirroring setup</strong>.  I.e., which server is the master, who are th
 slaves, are redirects allowed, if so from where, etc., etc., etc., should all
 have the same values for all of them.  I cannot over-emphasise the importance
 of this for proper mirroring.</p>
-
-<h3>gitolite functionality -- the 'upstream' trigger</h3>
-
-<p>The 'upstream' trigger has been modified to work, because it is really useful
-in this context.</p>
 
 <h2>other notes</h2>
 
