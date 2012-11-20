@@ -159,7 +159,11 @@ perfectly easy to turn this around if, instead of having a list of people who
 <li><p>something creates a bunch of virtual refs</p></li>
 <li><p>each generated vref goes through the gauntlet of the <a href="rules.html">rules</a>, just like
 the real ref does, with the same logic except for the fact that fallthru
-is success here.</p></li>
+is success here.</p>
+
+<p>This happens after the "real" ref (i.e., refs/heads/master or whatever)
+has already passed all the access rules that apply to it.  If the real ref
+gets rejected, VREF processing doesn't even happen.</p></li>
 </ul>
 
 <h3>how are vrefs "created"</h3>
