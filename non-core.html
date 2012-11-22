@@ -1,6 +1,6 @@
 
 <head>
-    <title>non-core programs shipped with gitolite</title>
+    <title>non-core features shipped with gitolite</title>
 <style>
     body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
     h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
@@ -23,20 +23,28 @@
 <p style="text-align:center">
 <font color="gray">This is for gitolite "g3"; for older (v2.x) documentation click <a href="http://sitaramc.github.com/gitolite/g2/master-toc.html">here</a></font>
 </p>
-<h1>non-core programs shipped with gitolite</h1>
+<h1>non-core features shipped with gitolite</h1>
 
-<p><strong>IMPORTANT NOTES</strong>:</p>
+<p><strong>Important Notes on "non-core" features</strong>:</p>
 
 <ol>
-<li><p>This document describes <em>only some</em> of the non-core programs that come
-with gitolite.  If you don't find what you want here, look in the
-appropriate directory (see the "locations" section in the
-<a href="cust.html">customisation</a> document).  Who knows, you might find some other
-cool feature you did not know about!</p></li>
-<li><p>Most commands should show a usage message when run with '-h' as the only
-argument.  For other types of code (VREFs, triggers, etc.), if you don't
-find documentation somewhere here, look inside the source code itself.</p></li>
-<li><p>By definition, non-core code is <strong>meant</strong> to be <a href="cust.html#localcode">localised for your
+<li><p>If information about a non-core feature is not found in the documentation,
+it can be found within the source code; please look there.</p>
+
+<p><a href="cust.html#commands">Commands</a>, however, have some extra magic, which is not available to
+the other types of non-core programs:</p>
+
+<ul>
+<li><p>running 'help', (either as <code>gitolite help</code> if you're logged into the
+server, or <code>ssh git@host help</code> if you're a remote user), will give you
+a list of commands you are allowed to run.</p></li>
+<li><p>every command will respond to being run with a single <code>-h</code> option with
+a suitable message.  Please report a bug to me if one of them doesn't.</p></li>
+</ul></li>
+<li><p>The <a href="cust.html">customisation</a> document has details about the various types of
+non-core programs that you can add to gitolite, and how to write your own.</p>
+
+<p>In particular, non-core code is <strong>meant</strong> to be <a href="cust.html#localcode">localised for your
 site</a> if you don't like what the shipped version does.  You can
 even maintain it <a href="cust.html#pushcode">within your gitolite-admin repo</a> if you wish.</p></li>
 </ol>
@@ -44,13 +52,13 @@ even maintain it <a href="cust.html#pushcode">within your gitolite-admin repo</a
 <hr />
 
 <ul>
-<li><a href="non-core.html">non-core programs shipped with gitolite</a>
+<li><a href="non-core.html">non-core features shipped with gitolite</a>
 <ul>
 <li>commands</li>
 <li>syntactic sugar</li>
 <li>triggers</li>
 <li>VREFs</li>
-<li>special cases
+<li>details on some non-core programs
 <ul>
 <li><a href="non-core.html#partial-copy">partial-copy: selective read control for branches</a></li>
 </ul></li>
@@ -61,25 +69,47 @@ even maintain it <a href="cust.html#pushcode">within your gitolite-admin repo</a
 
 <h2>commands</h2>
 
-<p>A list of these commands can be obtained by running <code>gitolite help</code> on the
-server.  A different (and probably much smaller) list can be obtained by a
-remote user running <code>ssh git@host help</code>.</p>
+<p>This is a list of commands that are available in gitolite, with brief
+descriptions and, if available, a link to more detailed information.  Note
+that in most cases running it with <code>-h</code> will give you enough to work with.</p>
 
-<p>All the commands that ship with gitolite will respond to <code>-h</code>; please report a
-bug to me if they don't.</p>
+<p>Also note that not all of these commands are available remotely.</p>
 
-<p>A particularly interesting command is the 'sudo' command, which allows an
-admin to run any remote command as some other user (though not the other way
-round!)</p>
-
-<p>Here's a list of some commands where additional information is available
-elsewhere:</p>
+<p>(The more common/important commands are in bold).</p>
 
 <ul>
-<li>'info' -- documented <a href="user.html#info">here</a></li>
-<li>'mirror' -- documented <a href="mirroring.html#sync">here</a></li>
-<li>'perms' -- get/set the gl-perms file; see <a href="user.html#perms">perms</a> for more</li>
-<li>'sskm' -- self-service key management, see <a href="sskm.html">sskm</a> for more</li>
+<li><em>access</em> -- print or test access rights for repo/user</li>
+<li><em>creator</em> -- print or test creator name for wild repo</li>
+<li><em>D</em> -- lets you <em>D</em>elete wild repos created using the <em>C</em> permission :)</li>
+<li><strong>desc</strong> -- show/set description for wild repo</li>
+<li><em>fork</em> -- fork a repo on the server.  This uses the <code>-l</code> option to git
+clone, so it runs really fast</li>
+<li><em>git-config</em> -- print (or text existence of) 'config' values in the repo.
+(Don't forget that <code>option foo.bar = 1</code> is merely syntactic sugar for
+<code>config gitolite-options.foo.bar = 1</code>, so this can be used to query
+gitolite options also</li>
+<li><strong>help</strong> -- see note 1 at the top of this document</li>
+<li><em>htpasswd</em> -- sets your htpasswd</li>
+<li><strong><a href="user.html#info">info</a></strong> -- print git/gitolite version, list repos you have access to</li>
+<li><em>list-dangling-repos</em> -- list repos that no one can access remotely
+anymore</li>
+<li><em><a href="locking.html">lock</a></em> -- lock binary files for exclusive use (in combination
+with the 'lock' VREF)</li>
+<li><em><a href="mirroring.html#sync">mirror</a></em> -- manually mirror a repo to a slave</li>
+<li><strong><a href="user.html#perms">perms</a></strong> -- list or set permissions for wild repo</li>
+<li><em><a href="emergencies.html#bypass">push</a></em> -- push a gitolite repo locally, bypassing gitolite</li>
+<li><em>rsync</em> -- bundling support for gitolite</li>
+<li><em>sshkeys-lint</em> -- look for potential problems in ssh keys</li>
+<li><em><a href="sskm.html">sskm</a></em> -- self-service key management</li>
+<li><em>sudo</em> -- allows an admin (i.e., someone who has push rights to the
+'gitolite-admin' repo) to run any remote command as some other user.  This
+is useful, for example, when a user claims he is unable to access a repo,
+and you need to check the 'info' output for him, etc.  However, it does
+not work the other way, sorry!</li>
+<li><em>symbolic-ref</em> -- run <code>git symbolic-ref</code> on a repo, remotely</li>
+<li><em>who-pushed</em> -- determine who pushed a given commit</li>
+<li><em>writable</em> -- disable/enable writes to specific repo (or all repos, if
+you're an admin)</li>
 </ul>
 
 <h2>syntactic sugar</h2>
@@ -87,63 +117,93 @@ elsewhere:</p>
 <p>The following "sugar" programs are available:</p>
 
 <ul>
-<li><p>Continuation-lines -- allow the use of C-style backslash escaped
-continuation lines in the conf file.  I don't like it but some people do,
-and now I can support them without bulking up the "core" conf parser!</p></li>
-<li><p>Keysubdirs-as-groups -- someone wanted the sub-directory name (of
-"keydir/") in which the pubkey was placed to be a group to which the user
-automatically belonged.  A very unusual requirement, and one which would
-<em>never</em> have seen the light of day in g2, but in g3 it's easy, and doesn't
-affect anyone else!</p>
-
-<p>(Note: the last component of the directory path is used if there are more
-than one level between "keydir/" and the actual file).</p></li>
+<li><em>continuation-lines</em> -- allow C-style backslash escaped continuation lines
+in the conf file</li>
+<li><em>keysubdirs-as-groups</em> -- use the last component of the sub-directory name
+within keydir as a group name</li>
+<li><strong>macros</strong> -- simple line-wise macro processor</li>
 </ul>
 
 <h2>triggers</h2>
 
-<p>Most triggers need to be enabled by adding or uncommenting an appropriate line
-in the <a href="rc.html">rc</a> file.  There are enough examples in there for the syntax to not
-need explanation.</p>
-
-<p>Some features need to be enabled in more than one trigger.  Mirroring is
-probably the best example -- it needs to hook into the <code>INPUT</code>, <code>PRE_GIT</code>, and
-the <code>POST_GIT</code> triggers to work.</p>
-
-<p>In general, the source code for each trigger will tell you what it is doing
-and which trigger list you should add it to.  Please note that there are two
-types of <a href="triggers.html">triggers</a>; the perl triggers usually have subroutine names that
-reflect what trigger sections they should go into.  (Using mirroring as an
-example again, the Mirroring.pm perl module has sub's named 'input',
-'pre_git', and 'post_git').</p>
-
-<p>Please report a bug to me if you could not find the information you wanted on
-any specific trigger.</p>
-
-<p>Here's a list of some triggers where additional information is available
-elsewhere:</p>
+<p>Here's a list of <strong>features</strong> that are enabled by <a href="triggers.html">triggers</a>, or a
+combination of a trigger and something else, like a command.</p>
 
 <ul>
-<li>Shell -- see "giving shell access to gitolite users" in <a href="sts.html">this</a> page.</li>
-<li>Mirroring -- see <a href="mirroring.html">doc/mirroring.mkd</a></li>
-<li>partial-copy -- this has its own section later in this page.</li>
+<li><em>Alias</em> -- allow repos to have aliases</li>
+<li><em>bg</em> -- allow long running post-compile/post-create jobs to be
+backgrounded</li>
+<li><em>CpuTime</em> -- CPU and elapsed times for gitolite+git</li>
+<li><strong><a href="mirroring.html">Mirroring</a></strong> -- mirroring all or some repos</li>
+<li><a href="non-core.html#partial-copy">partial-copy</a> -- simulated read control for branches (in combination
+with the partial-copy VREF)</li>
+<li><em>RefexExpr</em> -- (in combination with VREF/refex-expr) logical expressions
+over refexes, like "refex-1 and not refex-2".  (Example: changing file
+'foo' but not on 'master' branch)</li>
+<li><em>renice</em> -- renice the git operation</li>
+<li><em>RepoUmask</em> -- repo-specific umask settings</li>
+<li><em>Shell</em> -- see "giving shell access to gitolite users" in the <a href="sts.html">ssh
+troubleshooting and tips</a> page.  This also need the
+'ssh-authkeys-shell-users' trigger to be enabled.</li>
+<li><em>ssh-authkeys-shell-users</em> -- see 'Shell' entry just above</li>
+<li><em>ssh-authkeys-split</em> -- split pubkey files with multiple keys into
+separate files with one pubkey each</li>
+<li><em>update-description-file</em> -- if you want the 'description' file to be
+updated instead of the 'gitweb.description' config entry (e.g. cgit users)</li>
+<li><em>upstream</em> -- manage local, gitolite-controlled, copies of read-only
+upstream repos</li>
+</ul>
+
+<p>In addition, the following post-compile trigger scripts are enabled by
+default, so are included here only for completeness and in case you wish to
+disable them:</p>
+
+<ul>
+<li>ssh-authkeys -- process keys in keydir/ and add/update appropriate lines
+to the authorized keys file</li>
+<li>update-git-configs -- run <code>git config</code> in each repo to add/update entries
+as needed</li>
+<li>update-git-daemon-access-list -- create/delete the 'git-daemon-export-ok'
+files in each repo as needed</li>
+<li>update-gitweb-access-list -- create the "projects.list" file that gitweb
+uses to determine what repos to show/not show</li>
 </ul>
 
 <h2>VREFs</h2>
 
-<p>VREFs have their <a href="vref.html">own page</a>.</p>
+<p>VREFs are a complex topic and have their <a href="vref.html">own page</a> with lots more
+details.  However, here's a list of VREFs shipped with gitolite:</p>
 
-<h2>special cases</h2>
+<ul>
+<li><em><a href="vref.html#COUNT">COUNT</a></em> -- restrict pushes by number of changed or new files pushed</li>
+<li><em>EMAIL-CHECK</em> -- check if all new commits are authored by the person pushing</li>
+<li><em><a href="locking.html">lock</a></em> -- lock binary files for exclusive use (in combination
+with the 'lock' command)</li>
+<li><em>MAX_NEWBIN_SIZE</em> -- restrict by size of new binary files (helps catch
+people checking in random PDFs, JARs, WARs, etc.)</li>
+<li><strong><a href="vref.html#NAME">NAME</a></strong> -- restrict pushes by dir/file name</li>
+<li><a href="non-core.html#partial-copy">partial-copy</a> -- simulated read control for branches (in combination
+with the partial-copy trigger)</li>
+<li><em>refex-expr</em> -- (in combination with the refex-expr trigger) logical
+expressions over refexes, like "refex-1 and not refex-2".  (Example:
+changing file 'foo' but not on 'master' branch)</li>
+<li><em><a href="vref.html#votes">VOTES</a></em> -- voting on commits a la gerrit</li>
+</ul>
+
+<h2>details on some non-core programs</h2>
+
+<p>These non-core programs needed more detail than could be provided in the
+source code, but did not fit anywhere else neatly enough.</p>
 
 <h3><a name="partial-copy"></a> partial-copy: selective read control for branches</h3>
 
 <p>Git (and therefore gitolite) cannot do selective read control -- allowing
 someone to read branch A but not branch B.  It's the entire repo or nothing.</p>
 
-<p><font color="gray"> [Side note: Gerrit Code Review can do that, but that is
+<p><font color="gray">(Side note: Gerrit Code Review can do that, but that is
 because they have their own git stack (and their own sshd, and so on) all in
 one big Java program.  Gerrit is <em>really</em> useful if you want code review to be
-part of the access control decision] </font></p>
+part of the access control decision) </font></p>
 
 <p>Gitolite can now help you do this.  Note that this is only for branches; you
 can't do this for files and directories.</p>

@@ -47,7 +47,7 @@ who stop reading halfway!</p>
 <li>VREFs shipped with gitolite
 <ul>
 <li><a href="vref.html#NAME">restricting pushes by dir/file name</a></li>
-<li>number of new files</li>
+<li><a href="vref.html#COUNT">number of changed or new files</a></li>
 <li>advanced filetype detection</li>
 <li>checking author email</li>
 <li><a href="vref.html#votes">voting on commits</a></li>
@@ -128,7 +128,7 @@ bar/baz, the NAME vrefs would be <code>VREF/NAME/foo</code> and <code>VREF/NAME/
 
 <h2><a name="vref-fallthru"></a> why is fallthru considered success with VREFs</h2>
 
-<p>Virtual refs are <strong>best used</strong> [1] as additional "deny" rules, performing
+<p>Virtual refs are <strong>best used</strong> (1) as additional "deny" rules, performing
 extra checks that core gitolite cannot.  You usually want such extra checks
 only for some people.</p>
 
@@ -145,13 +145,16 @@ every user who was not already mentioned in the context of that vref:</p>
 <p>Worse, since every virtual ref involves calling an external program, many of
 these calls may be wasted.</p>
 
-<p>[1] "best used as..." does not mean "only used as...".  For example it's
-perfectly easy to turn this around if, instead of having a list of people who
-<em>do</em> need extra checks, all you have is the complementary list:</p>
+<p><font color="gray">(1) "best used as..." does not mean "only used as...".  For
+example it's perfectly easy to turn this around if, instead of having a list
+of people who <em>do</em> need extra checks, all you have is the complementary
+list:</p>
 
 <pre><code>RW+ VREF/NAME/Makefile      =   @senior-devs
 -   VREF/NAME/Makefile      =   @all
 </code></pre>
+
+<p></font></p>
 
 <h2>how does it work</h2>
 
@@ -329,7 +332,7 @@ CHANGELOG and any files in a directory called ReleaseNotes:</p>
         -   VREF/NAME/                  =   QA-guy
 </code></pre>
 
-<h3>number of new files</h3>
+<h3><a name="COUNT"></a> number of changed or new files</h3>
 
 <p>The COUNT VREF is used like this:</p>
 

@@ -40,13 +40,13 @@ the <a href="dev-notes.html">developer notes</a> page).</p>
 <li><a href="cust.html">customising gitolite</a>
 <ul>
 <li>introduction</li>
-<li>locations
+<li><a href="cust.html#ncloc">locations</a>
 <ul>
 <li>default/primary location of non-core programs</li>
 <li><a href="cust.html#localcode">alternate location -- the <code>LOCAL_CODE</code> rc variable</a></li>
 <li><a href="cust.html#pushcode">managing custom code via the gitolite-admin repo</a></li>
 </ul></li>
-<li>types of non-core programs
+<li><a href="cust.html#nctypes">types of non-core programs</a>
 <ul>
 <li><a href="cust.html#commands">gitolite "commands"</a></li>
 <li><a href="cust.html#hooks">hooks and gitolite</a></li>
@@ -77,7 +77,7 @@ different name to avoid confusion and constant disambiguation in the docs.</li>
 <p><a href="non-core.html">Here</a> is a list of non-core programs shipped with gitolite, with
 some description of each.</p>
 
-<h2>locations</h2>
+<h2><a name="ncloc"></a> locations</h2>
 
 <h3>default/primary location of non-core programs</h3>
 
@@ -147,7 +147,7 @@ running <code>gitolite setup --hooks-only</code> when you change any hooks and p
 <strong>However, if you do this, anyone who can push changes to the admin repo will
 effectively be able to run any arbitrary command on the server.</strong></p>
 
-<h2>types of non-core programs</h2>
+<h2><a name="nctypes"></a> types of non-core programs</h2>
 
 <h3><a name="commands"></a> gitolite "commands"</h3>
 
@@ -201,6 +201,9 @@ lines), while the parser in the core gitolite engine does not change.</p>
 
 <p>If you want to write your own sugar scripts, please read the "your own sugar"
 section in <a href="dev-notes.html">dev-notes</a> first then email me.</p>
+
+<p>You enable a sugar script by adding it to the <code>SYNTACTIC_SUGAR</code> list in the rc
+file.</p>
 
 <h3>triggers</h3>
 

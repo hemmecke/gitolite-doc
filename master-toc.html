@@ -148,23 +148,23 @@
 
 <h2>what your <a href="user.html">user</a>s need to know</h2>
 
-<h2><a href="special.html">special</a> features/setups</h2>
+<h2><a href="special.html">special</a> features in core gitolite</h2>
 
 <ul>
 <li>putting 'repositories' and '.gitolite' <a href="special.html#elsewhere">somewhere else</a></li>
 <li><a href="special.html#writable">disabling pushes</a> to take backups</li>
 <li><a href="special.html#pers">personal</a> branches</li>
-<li>(<a href="vref.html#votes">link</a>: voting on commits)</li>
 <li><a href="deleg.html">delegating</a> access control responsibilities
 <ul>
 <li>(<a href="vref.html#NAME">link</a>: the NAME VREF)</li>
 <li>the <a href="deleg.html#subconf">subconf</a> command</li>
 </ul></li>
-<li>(<a href="non-core.html#partial-copy">link</a>: faking selective READ control)</li>
 <li>using pubkeys obtained <a href="special.html#keysonly">from elsewhere</a></li>
-<li>(<a href="cust.html#pushcode">link</a>: updating code via the admin repo)</li>
 <li>giving users <a href="special.html#gh">their own repos</a></li>
 </ul>
+
+<p><strong>NOTE: <a href="non-core.html">non-core</a> features are listed in a separate document since there are
+so many of them</strong>.</p>
 
 <h2>interfacing with <a href="external.html">external</a> tools</h2>
 
@@ -188,8 +188,11 @@
 <h2><a href="cust.html">customisation</a></h2>
 
 <ul>
-<li>where do you put custom code?</li>
-<li>types of non-core programs
+<li><a href="cust.html#ncloc">where</a> do you put custom code?
+<ul>
+<li>(<a href="cust.html#pushcode">link</a>: updating code via the admin repo)</li>
+</ul></li>
+<li><a href="cust.html#nctypes">types</a> of non-core programs
 <ul>
 <li><a href="cust.html#commands">commands</a></li>
 <li><a href="cust.html#hooks">hooks</a></li>
@@ -214,19 +217,6 @@
 <li>sugar</li>
 </ul></li>
 <li>(appendix 1) notes on the INPUT trigger</li>
-</ul></li>
-</ul>
-
-<h2><a href="non-core.html">non-core</a> programs shipped with gitolite</h2>
-
-<ul>
-<li>commands</li>
-<li>syntactic sugar</li>
-<li>triggers</li>
-<li>(<a href="vref.html">link</a>: VREFs)</li>
-<li>special cases
-<ul>
-<li><a href="non-core.html#partial-copy">partial-copy</a>: selective read control for branches</li>
 </ul></li>
 </ul>
 
