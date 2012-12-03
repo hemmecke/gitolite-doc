@@ -30,7 +30,7 @@ server `.ssh/authorized_keys` file is messed up.
 ### The gitolite admin
 
 Adding a new public key to the system means to copy the key into
-`gitolite/keydir` commit and push.`
+`gitolite/keydir` commit and push.
 
 With `gkm` it would be
 
@@ -178,7 +178,7 @@ The command for this is:
 
     cat foo.pub | ssh git@host gkm add foo@example.com
 
-There are several situations when a adding a key is rejected.
+There are several situations when adding a key is rejected.
 
   * If the keyid is among a pattern that has been set by the gitolite
     admin, then the key is rejected. 
@@ -189,7 +189,7 @@ There are several situations when a adding a key is rejected.
     unless it is rejected by the previous condition.
 
   * If the keyid `foo@example.com` is already in use and it
-    corresponds to key with another fingerprint, then `gkm` will
+    corresponds to a key with another fingerprint, then `gkm` will
     reject the key and show the corresponding fingerprint. The guest
     key manager has to ask the guest to provide a public key with this
     exact fingerprint or add `foo.pub` under another keyid.
