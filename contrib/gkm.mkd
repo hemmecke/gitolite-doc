@@ -45,25 +45,14 @@ Suppose the gitolite admin of a research institute has set up gitolite
 to provide [wild repositories][wild] for example with a gitolite.conf
 like this.
 
-    # Allow only `RW` instead of `RW+` is importand later for `gkm`
-    # since it prevents the admin from accidentally removing guest
-    # keys. 
     repo gitolite-admin
-        RW  =   gitadmin
+        RW+  =   gitadmin
 
     # These people are allowed to create wild repositories.
-    @creators = u1 u2 ...
+    @creators = alice bob ...
 
     # public repositories that are also shown in gitweb
     repo pub/CREATOR/..*
-        C   =   @creators
-        RW+ =   CREATOR
-        RW  =   WRITERS
-        R   =   READERS gitweb daemon
-
-    # These project are protected from being read by gitweb by explicitly
-    # making the directory "private" unreadable by www-data.
-    repo private/CREATOR/..*
         C   =   @creators
         RW+ =   CREATOR
         RW  =   WRITERS
@@ -107,7 +96,7 @@ There are two files where `gkm` must be enabled.
 
     Guest key management must be enabled by adding something like
 
-        'gkm' => { FORBIDDEN\_ID\_PATTERN => qr(^SOME-PATTERN$) },
+        'gkm' => {MYDOMAIN='FORBIDDEN\_ID\_PATTERN => qr(^SOME-PATTERN$) },
 
     to the `COMMANDS`.
 
