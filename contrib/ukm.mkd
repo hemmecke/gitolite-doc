@@ -1,6 +1,7 @@
 # key management
 
-Copyright: Ralf Hemmecke <ralf@hemmecke.org>.
+Copyright 2012-2013  Ralf Hemmecke <ralf@hemmecke.org>.
+
 Licensed under the [Creative Commons
 Attribution-NonCommercial-ShareAlike 3.0 Unported
 License](http://creativecommons.org/licenses/by-nc-sa/3.0/)
@@ -9,7 +10,7 @@ Key management allows certain users to add and remove keys.
 
 The key management is done using a command called `ukm`. This command
 must be enabled for remote use by the admin (see [here][commands] for
-more on this).
+more on this) or look below.
 
 ----
 
@@ -19,11 +20,12 @@ more on this).
 
 ## Important Warning!
 
-User key management undermines the fundamental principle of gitolite (see
-[authentication versus authorisation][auth]) by allowing certain users
-to juggle with ssh public keys. Make sure the admin can login to the
-server with a password, just in case something breaks and your server
-`.ssh/authorized_keys` file is messed up.
+User key management undermines the fundamental principle of gitolite
+(see [authentication versus authorisation][auth]) by allowing certain
+users to juggle with ssh public keys. Make sure the someone
+(sysadmin?) can login to the server with a **password**, just in case
+something breaks and the `.ssh/authorized_keys` file for the
+user running gitolite on the server is messed up.
 
 ## Who might be interested?
 
@@ -37,7 +39,8 @@ With `ukm` it would be
     cat FOO.PUB | ssh git@host ukm add KEYID
 
 This would be a setup where only the gitolite admin can use `ukm`.
-Not a big benefit, but anyway.
+Not a big benefit, but `ukm` prevents adding identical keys
+under different userids.
 
 ### Users that want their work being done quickly
 
@@ -85,8 +88,10 @@ The effect would be the same.
 
 >    **WARNING**: It has not been tested whether the `sskm` command
 >    works together with `ukm`. Maybe it does, but guest users should
->    definitely not be allowed to use `sskm`, since `ukm` was designed
->    for exactly one key per guest.
+>    definitely not be allowed to use `sskm`.
+>
+>    In the future, `ukm` may be extended to allow some users to
+>    add/delete their own keys similar to what `sskm` provides now.
 
 >    ----
 
@@ -96,31 +101,51 @@ There are two files where `ukm` must be enabled.
 
     User key management must be enabled by adding something like
 
-        'ukm' => {MYDOMAIN => qr(^SOME-PATTERN$) },
+        'ukm' => {
+                ALLOWED_GUEST_PATTERN   => qr(ALLOWED-PATTERN),
+                FORBIDDEN_GUEST_PATTERN => qr(FORBIDDEN-PATTERN),
+            },
 
     to the `COMMANDS`.
 
-    Simply adding
+    With the meaning that the [KEYID](#KEYID) **must match**
+
+        qr(^($ALLOWED_GUEST_PATTERN)$)
+
+    and **must not match**
+
+        $FORBIDDEN_GUEST_PATTERN
+
+    in order for `ukm` to proceed with this [KEYID](#KEYID) for a
+    [guest key manager](#GKM).
+
+    If `ALLOWED_GUEST_PATTERN` is missing, it defaults to a pattern
+    that allows only [KEYID](#KEYID)s that look like email addresses.
+
+    If `FORBIDDEN_GUEST_PATTERN` is missing or if there is simply
 
         'ukm' => 1,
 
-    is equivalent to
+    it defaults to
 
-        'ukm' => {FORBIDDEN\_ID\_PATTERN => qr(^[^@]+$},
+        FORBIDDEN_GUEST_PATTERN => qr(.)
 
-    Any keyid that matches this pattern is rejected.
+    Any [KEYID](#KEYID) that matches this pattern is rejected, i.e.,
+    it basically allows only the [super key managers](#SKM) to add/del
+    keys.
 
-    If not set explicitly, `ukm` will reject keys that are added under
-    any keyid (in other words `ukm` is still disabled).
+    If `ukm` is supposed to work for people other than the gitolite
+    admin, `FORBIDDEN_GUEST_PATTERN` must be set to some reasonable
+    value.
 
     If your company has email addresses of the form
-    `first.last@my-company.com` you might want to write something like
+    `first.last@company.com` you might want to write something like
     this
 
-        'ukm' => { FORBIDDEN\_ID\_PATTERN => qr(^[^@]+$|@my-company.com$) },
+        'ukm' => { FORBIDDEN_GUEST_PATTERN => qr(@company.com$) },
 
-    which would forbid anything without a `@` in the keyid as well as
-    any keyid that looks like an email address of your company.
+    which would only allow [KEYID](#KEYID)s in the form of email
+    addresses that do not come from your company.
 
     (optional) <font color="red">**For the very brave only!!! Don't
     complain if you modify the default value!**</font>
@@ -137,8 +162,8 @@ There are two files where `ukm` must be enabled.
   * In `gitolite-admin/conf/gitolite.conf`:
 
     Create a group `@guest-key-managers` and add (trusted) users to
-    this group. Only users of that group are allowed to use the `ukm`
-    command.
+    this group. Only users of that group and
+    [super key managers](#SKM) are allowed to use the `ukm` command.
 
     **WARNING**: If you include `@all` into this list, it allows
     guests to add new public keys. If, additionally, you have
@@ -146,14 +171,15 @@ There are two files where `ukm` must be enabled.
     a hierarchy of new users with the same rights as the initial
     users.
 
-## How to use guest key management?
+## How to use user key management?
 
 There are three subcommands of `ukm`, namely `list` (the default),
 `add`, and `del`.
 
 ### List managed keys
 
-As guest key manager one can list all the personally managed keys via:
+A [guest key manager](#GKM) can list all the personally managed keys
+via:
 
     ssh git@host ukm
 
@@ -161,27 +187,39 @@ or
 
     ssh git@host ukm list
 
+If this command is issued by a [super key manager](#SKM), it lists all
+keys that are stored under `keydir/`.
+
 ### Add a new public key
 
 The command for this is:
 
     cat foo.pub | ssh git@host ukm add foo@example.com
 
-There are several situations when adding a key is rejected.
+There are several situations when the above command fails, i.e.,
+rejects to add the key.
 
-  * If the keyid is among a pattern that has been set by the gitolite
-    admin, then the key is rejected. 
+  * The [KEYID](#KEYID) `foo@example.com` does not match the pattern
+    given by `ALLOWED_GUEST_PATTERN` in `.gitolite.rc`.
 
-  * If the fingerprint of `foo.pub` is already known to the system,
-    then `ukm` will reject the key and show to which keyid this key
-    belongs. Adding `foo.pub` under this other keyid should work
-    unless it is rejected by the previous condition.
+  * The [KEYID](#KEYID) `foo@example.com` matches the pattern given by
+    `FORBIDDEN_GUEST_PATTERN` in `.gitolite.rc`.
 
-  * If the keyid `foo@example.com` is already in use and it
-    corresponds to a key with another fingerprint, then `ukm` will
-    reject the key and show the corresponding fingerprint. The guest
-    key manager has to ask the guest to provide a public key with this
-    exact fingerprint or add `foo.pub` under another keyid.
+  * The public key `foo.pub` is already known to the system and does
+    not belong to the [USERID](#USERID) `foo@example.com`.
+
+  * The [KEYID](#KEYID) `foo@example.com` is already in use and it
+    corresponds to a key with another public key. In other words,
+    `ukm` will not simply override a key. One has to delete the old
+    key first and then add a new one.
+
+  * The [KEYID](#KEYID) contains a `/` character or two `@`
+    characters, i.e., guest key managers are not allowed to add
+    [multiple keys](#MULTIKEY) for one user.
+
+A [super key manager](#SKM) can nearly add any key, but `ukm` does not
+accept a different key for the same [KEYID](#KEYID). Also a double dot
+is not allowed.
 
 ### Delete a guest key
 
@@ -189,11 +227,13 @@ The command for this is:
 
     ssh git@host ukm del foo@example.com
 
-If the given keyid is not among the managed keys of the user who
-issues the `del` command, the command will fail.
+If the given [KEYID](#KEYID) is not among the managed keys of the user
+who issues the `del` command, the command will fail.
 
 **IMPORTANT!** You should not forget to remove from all of your
-repositories all the permissions you gave to `foo@example.com`
+repositories all the permissions you gave to `foo@example.com`,
+because this key might still be managed by another
+[guest key manager](#GKM).
 
 You might want to run
 
@@ -202,12 +242,60 @@ You might want to run
            -e 'while(<>){if(/\s(\S+)\s+$u$/){print "$1\n"}}' \
     | while read r; do ssh git@host perms $r - WRITERS foo@example.com; done
 
-Repeat this for other roles such as `READERS`.
+Repeat this for other roles such as `READERS` instead of `WRITERS`.
 
 ### Generic Errors
 
 Key management is done via creating a temporary clone of the
 `gitolite-admin` repository, changing, committing, and pushing back.
-In cases where two guest key managers add a new key at the same time,
-one of the push commands will most probably fail. Then simply redo the
-command after a while.
+In cases where two people are trying to modify the `gitolite-admin` at
+the same time, one of the push commands will most probably fail. Then
+simply redo the command after a while.
+
+## Glossary
+
+* **super key manager**<a id="SKM"></a>:
+  Users with write access to the `gitolite-admin` repositoriy count
+  as [super key managers](#SKM) and have no restriction on how
+  [KEYID](#KEYID)s must look like. They can do (nearly) everything
+  inside `keydir/` that they could do anyway when pushing to the
+  `gitolite-admin` repository directly.
+
+* **guest key manager**<a id="GKM"></a>:
+  a user who is a member of the `@guest-key-manager` group
+
+* **KEYID**<a id="KEYID"></a>:
+  an identifier for a key given on the command line
+
+  The KEYID is normalized to lowercase letters.
+
+  If the script is called by one of the super key managers, then the
+  KEYID is the path to the pubkey file relative to the `keydir/`
+  without the `.pub` extension.
+
+  If called by a guest key manager, it's relative to the
+  `GUEST_DIRECTORY`.
+
+* **USERID**<a id="USERID"></a>:
+  The [KEYID](#KEYID) given on the command line will be translated
+  into a USERID which is used inside `conf/gitolite.conf` or for the
+  [perms][] [command][commands] of gitolite.
+
+## Security note
+
+<a id="MULTIKEY">
+[Super key managers](#SKM) can basically add any key, but
+[guest key managers](#GKM) are not allowed to add
+[multiple keys][multi-key] and this restriction is hardcoded.
+
+Suppose Alice adds `bob.pub` for `bob@example.org` and David adds
+`eve.pub` under the keyid `bob@example.org@foo`. (Of course, only Eve
+and not Bob has the private key correspoinding to `eve.pub`.) This
+basically gives Eve the same rights as Bob.
+
+## Important notes for the admin
+
+Note that `ukm` clones, changes, and pushes back the `gitolite-admin`
+repo. This means, even if you're the only administrator, you should
+never `git push -f`, because that might override something `ukm`
+did.
