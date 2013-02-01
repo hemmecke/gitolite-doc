@@ -40,7 +40,7 @@ With `ukm` it would be
 
 This would be a setup where only the gitolite admin can use `ukm`.
 Not a big benefit, but `ukm` prevents adding identical keys
-under different userids.
+under different userids, which might be an advantage.
 
 ### Users that want their work being done quickly
 
@@ -101,42 +101,24 @@ There are two files where `ukm` must be enabled.
 
     User key management must be enabled by adding something like
 
-        'ukm' => {
-                ALLOWED_GUEST_PATTERN   => qr(ALLOWED-PATTERN),
-                FORBIDDEN_GUEST_PATTERN => qr(FORBIDDEN-PATTERN),
-            },
+        'ukm' => { FORBIDDEN_GUEST_PATTERN => qr(FORBIDDEN-PATTERN), },
 
     to the `COMMANDS`.
-
-    With the meaning that the [KEYID](#KEYID) **must match**
-
-        qr(^($ALLOWED_GUEST_PATTERN)$)
-
-    and **must not match**
-
-        $FORBIDDEN_GUEST_PATTERN
-
-    in order for `ukm` to proceed with this [KEYID](#KEYID) for a
-    [guest key manager](#GKM).
-
-    If `ALLOWED_GUEST_PATTERN` is missing, it defaults to a pattern
-    that allows only [KEYID](#KEYID)s that look like email addresses.
 
     If `FORBIDDEN_GUEST_PATTERN` is missing or if there is simply
 
         'ukm' => 1,
 
-    it defaults to
+    it defaults to the following.
 
         FORBIDDEN_GUEST_PATTERN => qr(.)
 
     Any [KEYID](#KEYID) that matches this pattern is rejected, i.e.,
-    it basically allows only the [super key managers](#SKM) to add/del
-    keys.
+    the default value basically allows only the
+    [super key managers](#SKM) to add/del keys.
 
-    If `ukm` is supposed to work for people other than the gitolite
-    admin, `FORBIDDEN_GUEST_PATTERN` must be set to some reasonable
-    value.
+    If `ukm` is supposed to work for [guest key managers](#GKM),
+    `FORBIDDEN_GUEST_PATTERN` must be set to some reasonable value.
 
     If your company has email addresses of the form
     `first.last@company.com` you might want to write something like
@@ -144,20 +126,63 @@ There are two files where `ukm` must be enabled.
 
         'ukm' => { FORBIDDEN_GUEST_PATTERN => qr(@company.com$) },
 
-    which would only allow [KEYID](#KEYID)s in the form of email
+    which would only allow [KEYIDs](#KEYID) in the form of email
     addresses that do not come from your company.
 
-    (optional) <font color="red">**For the very brave only!!! Don't
-    complain if you modify the default value!**</font>
+    <font color="red">**For the very brave only!!!**</font>
+    
+    The following variables are optional. It is strongly discouraged
+    to set them, but if you know, what you are doing, it allows for a
+    bit more flexibility.
 
-    Additionaly, you can put
+    <font color="red">**Don't complain if you modify the default
+    value!!!**</font>
 
-        GUESTS_DIRECTORY => 'zzzzz-guests',
+    * (optional) `ALLOWED_GUEST_PATTERN`: It defaults to a regular
+      expression that only allow [KEYIDs](#KEYID) in the form of email
+      addresses (see the source code if you want to see this regular
+      expression).
 
-    into the `'ukm'` hash. This corresponds to a subdirectory under
-    `gitolite-admin/keydir` where the guest keys will be stored. The
-    above value is the default. This value starts with 'zzzzz' to let
-    guest keys appear at the very end in `authorized_keys`.
+      In fact, there are two patterns. In addition to
+      `FORBIDDEN_GUEST_PATTERN`, you can also write
+
+            'ukm' => {
+                      ALLOWED_GUEST_PATTERN   => qr(ALLOWED-PATTERN),
+                      FORBIDDEN_GUEST_PATTERN => qr(FORBIDDEN-PATTERN),
+                     },
+
+      with the meaning that the [KEYID](#KEYID) **must match**
+
+            qr(^(ALLOWED_GUEST_PATTERN)$)
+
+      and **must not match**
+
+            FORBIDDEN_GUEST_PATTERN
+
+      in order for `ukm` to proceed with this [KEYID](#KEYID) for a
+      [guest key manager](#GKM).
+
+      Gitolite's namespace for [USERIDs](#USERID) is flat.
+      The `ALLOWED_GUEST_PATTERN` and `FORBIDDEN_GUEST_PATTERN` serve
+      two purposes.
+
+        1. Restrict permissions for what [guest key managers](#GKM)
+           can do.
+
+        1. Patterns that cannot be used for guests can still be used
+           by [super key managers](#SKM). In other words, those
+           patterns are reserved for in-house [USERIDs](#USERID).
+
+    * (optional) `GUESTS_DIRECTORY`:
+    
+      You can put
+
+            GUESTS_DIRECTORY => 'zzz/guests',
+
+      into the `'ukm'` hash. This corresponds to a subdirectory under
+      `gitolite-admin/keydir` where the guest keys will be stored. The
+      above value is the default. This value starts with 'zzz' to let
+      guest keys appear at the very end in `authorized_keys`.
 
   * In `gitolite-admin/conf/gitolite.conf`:
 
@@ -257,7 +282,7 @@ simply redo the command after a while.
 * **super key manager**<a id="SKM"></a>:
   Users with write access to the `gitolite-admin` repositoriy count
   as [super key managers](#SKM) and have no restriction on how
-  [KEYID](#KEYID)s must look like. They can do (nearly) everything
+  [KEYIDs](#KEYID) must look like. They can do (nearly) everything
   inside `keydir/` that they could do anyway when pushing to the
   `gitolite-admin` repository directly.
 
