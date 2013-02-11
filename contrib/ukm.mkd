@@ -173,17 +173,6 @@ There are two files where `ukm` must be enabled.
            by [super key managers](#SKM). In other words, those
            patterns are reserved for in-house [USERIDs](#USERID).
 
-    * (optional) `GUESTS_DIRECTORY`:
-    
-      You can put
-
-            GUESTS_DIRECTORY => 'zzz/guests',
-
-      into the `'ukm'` hash. This corresponds to a subdirectory under
-      `gitolite-admin/keydir` where the guest keys will be stored. The
-      above value is the default. This value starts with 'zzz' to let
-      guest keys appear at the very end in `authorized_keys`.
-
   * In `gitolite-admin/conf/gitolite.conf`:
 
     Create a group `@guest-key-managers` and add (trusted) users to
