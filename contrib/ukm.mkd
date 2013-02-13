@@ -9,8 +9,8 @@ License](http://creativecommons.org/licenses/by-nc-sa/3.0/)
 User key management allows certain users to add and remove keys.
 
 The key management is done using a command called `ukm`. This command
-must be enabled for remote use by both the [sysadm](#SYSADMIN) and the
-[gitolite-admin](#SKM) (see [here][commands] for more on this) or look
+must be enabled for remote use by both the [sysadmin](#SYSADMIN) and the
+[gitolite-admin](#GA) (see [here][commands] for more on this) or look
 below.
 
 ----
@@ -50,6 +50,8 @@ In the following description we assume that there is an entry like
          HostName gitolite.example.org # location where gitolite is installed
          User git                      # user that runs gitolite
 
+in the client's `~/.ssh/config` file.
+
 ## Who might be interested?
 
 ### The gitolite admin
@@ -61,18 +63,19 @@ With `ukm` it would be
 
     cat FOO.PUB | ssh gitserver ukm add KEYID
 
-This would be a setup where only the [gitolite administrator](#SKM)
-uses `ukm`. Not a big benefit, but `ukm` prevents adding identical keys
-under different userids. This consistency check might be an advantage.
-Furthermore, `ukm` does not allow the [gitolite administrator](#SKM)
-to remove his/her last, i.e., it prevents the administrator from
-locking him-/herself out of the system. (Note, we assume that the
-[gitolite administrator](#SKM) has no shell access to the server; only
-the [sysadm](#SYSADMIN) has shell access.)
+This would be a setup where only the [gitolite administrator](#GA)
+uses `ukm`. Not a big benefit, but `ukm` prevents adding identical
+keys under different userids. This consistency check might be an
+advantage. Furthermore, `ukm` does not allow the
+[gitolite administrator](#GA) to remove his/her last, i.e., it
+prevents the administrator from locking him-/herself out of the
+system. (Note, we assume that the [gitolite administrator](#GA) has no
+shell access to the server; only the [sysadmin](#SYSADMIN) has shell
+access.)
 
 ### Users that want their work being done quickly
 
-Suppose the [gitolite administrator](#SKM) of a research institute has
+Suppose the [gitolite administrator](#GA) of a research institute has
 set up gitolite to provide [wild repositories][wild] for example with
 a `gitolite.conf` like this.
 
@@ -90,15 +93,15 @@ a `gitolite.conf` like this.
         R   = READERS
   
 Researchers Alice and Bob want to write an article together. Alice
-creates a wild repository `private/alice/article` and adds Bob via the
-`perms` command to the WRITERS of her repository. After a while they
-realize that Otto from another institute would be a reasonable third
-author. However, if they cannot give him write access to the
-repository, they would have to exchange the article via email. Back to
-the stone age? Better, Alice asks Otto to send her his public ssh key.
-Alice then forwards that key to the gitolite administrator and asks
-him to include that key into the system. (Hopefully, all that didn't
-happen on a holiday or on the weekend.) After 3 days the gitolite
+creates a wild repository `alice/article` and adds Bob via the `perms`
+command to the WRITERS of her repository. After a while they realize
+that Otto from another institute would be a reasonable third author.
+However, if they cannot give him write access to the repository, they
+would have to exchange the article via email. Back to the stone age?
+Better, Alice asks Otto to send her his public ssh key. Alice then
+forwards that key to the gitolite administrator and asks him to
+include that key into the system. (Hopefully, all that didn't happen
+on a holiday or on the weekend.) After 3 days the gitolite
 administrater finds some time. Since he doesn't know Otto, he simply
 trusts Alice and adds the public key into the system.
 
@@ -106,7 +109,7 @@ With `ukm` Alice can save bothering the gitolite administrator and is
 perhaps even faster in saying:
 
     cat otto.pub | ssh gitserver ukm add otto@other.institute.edu
-    ssh gitserver perms private/alice/article + WRITERS otto@other.institute.edu
+    ssh gitserver perms alice/article + WRITERS otto@other.institute.edu
 
 The effect would be the same.
 
@@ -116,10 +119,10 @@ Suppose, you have different computers and a different ssh key for each
 of them. You would like to tell gitolite that all these different keys
 belong to just one gitolite identity.
 
-Your [gitolite administrator](#SKM) creates your gitolite identity
-with one of your keys as your initial key. This key can only be
-managed by the gitolite administrator, not by you. It basically
-determines under which name you are known to gitolite.
+Your [gitolite administrator](#GA) creates your gitolite identity with
+one of your keys as your initial key. This key can only be managed by
+the gitolite administrator, not by you. It basically determines under
+which name you are known to gitolite.
 
 You can add new keys to this identity and remove them at your will.
 
@@ -130,17 +133,17 @@ them requires different values in the respective config files.
 
 There are two files where `ukm` must be enabled.
 
-  * [.gitolite.rc][rc] (managed by a [sysadm](#SYSADMIN) of the gitserver)
-  * `gitolite-admin/conf/gitolite.conf` (managed by a [gitolite administrator](#SKM))
+  * [.gitolite.rc][rc] (managed by a [sysadmin](#SYSADMIN) of the gitserver)
+  * `gitolite-admin/conf/gitolite.conf` (managed by a [gitolite administrator](#GA))
 
 ### Gitolite administrators
 
-The easiest option is to enable `ukm` only for Gitolite administrator.
-All you have to do is to put a line
+The easiest option is to enable `ukm` only for
+[gitolite administrators](#GA). All you have to do is to put a line
 
     'ukm' => 1,
 
-to the `COMMANDS` has in [.gitolite.rc][rc].
+to the `COMMANDS` hash in [.gitolite.rc][rc].
 
 In fact, `ukm` is enabled for a gitolite administrator whenever
 (instead of the `1` above) there is a non-zero value. In other words,
@@ -188,7 +191,7 @@ If `ukm` is supposed to work for [guest key managers](#GKM),
 If your company has email addresses of the form
 `first.last@company.com` you might want to write something like this
 
-   'ukm' => { FORBIDDEN_GUEST_PATTERN => qr(@company.com$) },
+    'ukm' => { FORBIDDEN_GUEST_PATTERN => qr(@company.com$) },
 
 which would only allow [KEYIDs](#KEYID) in the form of email addresses
 that do not come from your company.
@@ -203,7 +206,7 @@ allows for a bit more flexibility.
 value!!!**</font>
 
 `ALLOWED_GUEST_PATTERN` defaults to a regular expression that only
-allow [KEYIDs](#KEYID) in the form of email addresses (see the source
+allows [KEYIDs](#KEYID) in the form of email addresses (see the source
 code if you want to see this regular expression).
 
 In fact, there are two patterns. In addition to
@@ -229,12 +232,12 @@ Gitolite's namespace for [USERIDs](#USERID) is flat. The
 `ALLOWED_GUEST_PATTERN` and `FORBIDDEN_GUEST_PATTERN` serve two
 purposes.
 
-    1. Restrict permissions for what [guest key managers](#GKM) can
-       do.
+  1. Restrict permissions for what [guest key managers](#GKM) can
+     do.
 
-    1. Patterns that cannot be used for guests can still be used by
-       [super key managers](#SKM). In other words, those patterns are
-       reserved for in-house [USERIDs](#USERID).
+  1. Patterns that cannot be used for guests can still be used by
+     [super key managers](#SKM). In other words, those patterns are
+     reserved for in-house [USERIDs](#USERID).
 
 ### Self key managers
 
@@ -244,11 +247,11 @@ The gitolite administrator defines self key managers by creating a
 group `@self-key-managers` in `gitolite-admin/conf/gitolite.conf` and
 adding (trusted) users to this group.
 
-**WARNING**: A [gitolite administrator](#SKM) shouldn't include `@all`
+**WARNING**: A [gitolite administrator](#GA) shouldn't include `@all`
 into this list. If guest key management is enabled, then also guests
 would be allowed to add their own keys. Since
 [guest key managers](#GKM) would have no access to those keys, only
-[gitolite administrators](#SKM) would be able to remove those
+[gitolite administrators](#GA) would be able to remove those
 additional keys. In fact, `ukm` was designed to allow only **one** key
 per guest. Don't complain, if you enable a setup where guests can have
 multiple keys. It's a security issue. (Suppose Alice has added a guest
@@ -360,12 +363,13 @@ If you don't want to create an intermediate file call it like this:
     cat foo.pub | ssh gitserver ukm add @two | (sleep 2; ssh -i foo gitserver ukm)
 
 Make sure that the second ssh call only happens after the fist one has
-done its job. Otherwise you might be asked for a password of
-`gitserver`.
+done its job. Otherwise you might be asked for a password of the `git`
+user on the `gitserver`.
 
 After successfully completing the first ssh call, the new key is
-scheduled for addition and a session key is returned on stdin.
-
+scheduled for addition and a session key is returned on stdin. That
+session key must be used to confirm the addition of the new public key
+as shown above.
 
 ### Delete a key
 
@@ -416,13 +420,13 @@ non-pending state.
 
 **Note:** This safety net is not absolutely necessary, since a
 [self key manager](#EKM) is not allowed to delete his/her initial key
-(added by the [gitolite administrator](#SKM)). The command `ukm` wants
+(added by the [gitolite administrator](#GA)). The command `ukm` wants
 to make sure that the user still has a key that can be used for
 login. (Think about having lost the passphrase for the initial key. --
 Maybe this over complication will be simplified in the future. Losing
 a passphrase is not a good excuse and should result in removal of the
 corresponding key from the system, i.e., contacting the
-[gitolite administrator](#SKM).)
+[gitolite administrator](#GA).)
 
 ### Generic Errors
 
@@ -438,7 +442,7 @@ probably fail. Then simply redo the command after a while.
   This is a person who is able to edit the `.gitolite.rc` file on the
   server machine.
 
-* **super key manager** = **gitolite administrator**<a id="SKM"></a>:
+* **super key manager** = **gitolite administrator**<a id="SKM"></a><a id="GA></a>:
   Users with write access to the `gitolite-admin` repositoriy count
   as [super key managers](#SKM) and have no restriction on how
   [KEYIDs](#KEYID) must look like. They can do (nearly) everything
@@ -491,7 +495,7 @@ did.
 
 The command `ukm` has been created with also having the
 `keysubdirs-as-groups` [syntactic sugar][non-core] in mind. If a
-[gitolite administrator](#SKM)) manages the respective keys in
+[gitolite administrator](#SKM) manages the respective keys in
 sub-directories with names `guest-key-managers/` and
 `self-key-managers/`, respectively, he/she can use the `ukm` command
 to control who is allowed to manage keys.
